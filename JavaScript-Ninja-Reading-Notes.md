@@ -898,5 +898,109 @@ Gun
 ```
 >for-of循环不会关心生成器是否委托到另一个生成器上，它只关心在done状态到来之前都一直在调用next方法。
 #####2、使用生成器
+- 用生成器生成唯一ID序列。
+```
+function* IdGenerator() {
+	let id = 0;    //一个记录ID的变量，无法在生成器外部改变
+	while (true) { //通过循环自增生成id
+		yield++id;
+	}
+}
 
+const idIterator = IdGenerator();//通过迭代器访问生成器
+const id1 = idIterator.next().value   //通过迭代器请求3个id值
+const id2 = idIterator.next().value;
+const id3 = idIterator.next().value;
+console.log(id1, id2, id3)  
+//打印结果：
+1 2 3
+```
+>标准函数中不建议书写无限循环的代码。但是在生成器中是可以的，只有调用next方法时，while循环才会迭代一次并返回一个id值。
+
+- 使用迭代器遍历DOM树
+```
+function* DomTraversal(element) {
+	yield element;
+	element = element.firstElementChild;
+	while (element) {
+		yield* DomTraversal(element);//使用yield*将迭代控制转移到另一个DomTraversal生成器实例上
+		element = element.nextElementSibling;
+	}
+}
+const subTree = document.getElementById("subTree");
+for(let element of DomTraversal(subTree)) {  //使用for-of对节点进行循环迭代
+	console.log(element.nodeName)
+}
+```
+>在上述例子中，我们为每个访问过的节点创建了一个生成器并将代码执行权交给它，从而使我们能够以迭代的方式书写概念上递归的代码。同时它还告诉我们如何在不必使用回调函数的情况下使用生成器函数来解耦代码，从而将产生值的代码和消费值的代码分隔开。在很多场景下，使用迭代器比使用递归都要自然，所以保持一个开放的思路很重要。
+
+#####3、与生成器交互
+- 作为生成器函数的参数，向生成器传递值
+```
+function* NinjaGenerator(action) {
+  yield ("Hattori " + action);
+  yield ("Yoshi (" + imposter + ") " + action);
+}
+ 
+const ninjaIterator = NinjaGenerator("skulk");
+const result1 = ninjaIterator.next();
+console.log(result1.value);
+
+const result2 = ninjaIterator.next();
+console.log(result2.value);
+```
+- 使用next方法向生成器发送值
+```
+function* NinjaGenerator(action) {
+  const imposter = yield ("Hattori " + action);
+  console.log(imposter); //Hanzo作为yield表达式的返回值
+  yield ("Yoshi (" + imposter + ") " + action);
+}
+ 
+const ninjaIterator = NinjaGenerator("skulk");
+const result1 = ninjaIterator.next();
+console.log(result1.value);
+
+const result2 = ninjaIterator.next("Hanzo");//第二次调用时向生成器传递参数Hanzo
+console.log(result2.value);
+```
+> 第二次调用next方法时，next参数作为yield表达式的值传回生成器。next方法为等待中的yield表达式提供了值，如果没有等待中的yield表达式，也就无法使用next传入的值。因此我们无法通过第一次调用next方法来向生成器提供该值。可以通过生成器自身的参数向生成器提供初始值。(这段我都不知道说的什么鬼。。)
+
+- 抛出异常
+每个迭代器除了next方法，还有一个throw方法。
+```
+function* NinjaGenerator() {
+	try {
+		yield "Hattori";
+	} catch (e) {
+		console.log(e);
+	}
+}
+const ninjaIterator = NinjaGenerator();
+const result1 = ninjaIterator.next();
+const result2 = ninjaIterator.throw("exception");
+```
+##### 4、探索生成器内部构成
+- 生成器的工作如一个状态机
+挂起开始：创建了一个生成器后，最先以挂起状态开始。
+执行：执行要么是刚开始，要么是刚从上次挂起的时候继续。当生成器对应的迭代器调用了next函数，并且当前存在可执行的代码时，生成器都会转移到这个状态。
+挂起让渡：当生成器在执行过程中遇到一个yield表达式，它会创建一个包含着返回值得新对象，随后再挂起执行。
+完成：在生成器执行期间，如果代码执行到return语句或者全部代码执行完毕，生成器进入该状态。
+- 通过执行上下文跟踪生成器函数
+```
+function* NinjaGenerator(action) {
+  yield ("Hattori " + action);
+  yield ("Yoshi " + action);
+}
+ 
+const ninjaIterator = NinjaGenerator("skulk");
+const result1 = ninjaIterator.next();
+console.log(result1.value);
+const result2 = ninjaIterator.next();//第二次调用时向生成器传递参数Hanzo
+console.log(result2.value); 
+```
+当调用生成器函数时，当前执行上下文会创建一个新的函数环境上下文NinjaGenerator，并将该上下文入栈。而生成器比较特殊，它不会执行任何函数代码，会返回一个迭代器，该迭代器会保存生成器的函数上下文。生成器执行结束后，NinjaGenerator会从栈中弹出，但是迭代器会保存该环境的引用。当调用迭代器next函数时，并没有生成一个新的函数上下文，仅仅是激活挂起的生成器的执行上下文，并将该上下文放入栈的顶部。
+> 当我们从生成器中取得控制权后，生成器的执行环境上下文一直是保存的，而不是像标准函数一样退出后销毁。
+
+####三、使用promise
 
