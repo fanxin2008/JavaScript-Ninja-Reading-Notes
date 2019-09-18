@@ -1043,4 +1043,121 @@ Resolving ninjaDelayPromise
 Hattori ninjaDelayPromise resolve handled with Hattori
 ```
 #####3、拒绝promise
-拒绝一个promise有两种方式：显式拒绝；隐式拒绝。
+拒绝一个promise有两种方式，显式拒绝：在一个promise的执行函数中，调用传入的reject函数；隐式拒绝：正在处理的promise过程中抛出了一个异常。
+```javascript
+//显式拒绝
+const promise = new Promise((resolve, reject) => {
+	reject("Explicitly reject a promise!");
+})
+promise.then(()=>{
+	console.log("Promise complete")
+},error =>{
+	console.log("Promise rejected")   //promise被拒绝，第二个回调函数被触发
+})
+
+//链式调用catch方法
+const promise = new Promise((resolve, reject){
+	reject("Explicitly reject a promise!");
+});
+promise.then(()=>{console.log("Promise complete")}) 
+	   .catch(()=>{console.log("Promise rejected")});    //通过在then后链式调用catch方法，我们可以同样可以在promise进入被拒绝状态时，提供错误回调函数。
+
+//隐式拒绝一个promise
+const promise = new Promise((resolve, reject)=>{
+	undeclaredVariable++;  //未定义的变量自增，代码抛出异常，promise被隐式拒绝
+});
+
+promise.then(()=>{})
+		.catch(error=>{console.log("promise exception, promise rejected")}) //通过链式调用catch，捕获异常处理提供错误回调函数。
+```
+#####4、创建第一个真实promise案例
+```javaScript
+function getJSON(url) {
+	return new Promise((resolve, reject)=>{
+		const request = new XMLHttpRequest();
+		request.open("GET", url);
+		request.onload = function() {
+			try {
+				if (this.status === 200) {
+					resolve(JSON.parse(this.response));
+				} else {
+					reject(this.status + " " + this.statusText);
+				}
+			}catch(e) {
+				reject(e.message);
+			}
+		};
+		request.onerror = function() {
+			reject(this.status + " " + this.statusText);
+		};
+		request.send();
+	});
+}
+getJSON("data/ninjas.json").then(data=>{
+	console.log("get data from server")
+}).catch(error=>{
+	console.log("some error");
+})
+```
+上述例子中，有三个潜在的错误源，客户端和服务器之间的连接错误、服务器返回错误数据以及无效的JSON代码。我们只需要为promise提供回调函数来处理成功和错误。
+#####5、链式调用promise
+我们可以在then函数上注册一个回调函数，一旦promise成功兑现就会触发该回调函数。我们还可以在调用then方法后，返回一个新的promise对象。以下代码会创建一系列promise，一个接一个地被解决。我们可以通过then方法传递第二个回调函数来捕获每次请求的错误，也可以通过链式的调用一个catch方法，来捕获任一promise产生的错误。
+```javaScript
+getJSON("data/ninjas.json")
+	.then(ninja => getJSON(ninjas.missionUrl))
+	.then(missions => getJSON(missions.detailUrl))
+	.then(details => console.log("get the details"))
+	.catch(error => console.log("An error has occurred"))  //通过catch捕获任何步骤中产生的promise错误
+```
+#####6、等待多个promise
+可以使用Promise.all实现等待多个独立的异步任务。我们不关心任务执行的顺序，一旦数组中的任务全部被解决，这个promise就是完成态，如果其中一个任务失败了，那么这个promise会整体被拒绝。
+```javaScript
+Promise.all([
+	getJSON("data/ninjas.json"),
+	getJSON("data/missions.json"),
+	getJSON("data/details.json")
+]).then(result=>{
+	const ninjas = result[0];
+	const missions = result[1];
+	const details = result[2];
+}).catch(error=>console.log("An problem in carrying out plan!"))
+```
+#####7、promise竞赛
+如果我们只关心第一个成功或者失败的promise，可以使用Promise.race。一旦数组中的某一个任务被处理或者被拒绝，这个返回的promise同样会被处理或被拒绝。
+```javaScript
+Promise.race([
+	getJSON("data/yoshi.json"),
+	getJSON("data/hattori.json"),
+	getJSON("data/hanzo.json")
+]).then(ninja => console.log("first one: " + ninja.name))
+.catch(error => console.log("An error has occurred"))
+```
+####四、把生成器和promise相结合
+```javaScript
+function async(generator){
+	var iterator = generator();
+	function handle(iteratorResult) {
+		if(iteratorResult.done) {return;}
+		const iteratorValue = iteratorResult.value;
+		if(iteratorValue instanceof Promise) {
+			iteratorValue.then(res => handle(iterator.next(res)))
+						.catch(err=>iterator.throw(err));
+		}
+	}
+	try {
+		handle(iterator.next());
+	} catch (e) {
+		iterator.throw(e)
+	}
+}
+
+async(function* (){
+	try{
+		const ninjas = yield getJSON("data/ninjas.json");
+		const missions = yield getJSON(ninjas.missionUrl);
+		const detail = yield getJSON(missions.detailUrl);	
+	} catch(e) {
+		console.log("An problem in carrying out plan!")
+	}
+})
+```
