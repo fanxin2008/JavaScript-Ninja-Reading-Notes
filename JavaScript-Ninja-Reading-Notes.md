@@ -1003,4 +1003,44 @@ console.log(result2.value);
 > 当我们从生成器中取得控制权后，生成器的执行环境上下文一直是保存的，而不是像标准函数一样退出后销毁。
 
 ####三、使用promise
+**promise对象是我们现在尚未得到，但是将来会得到的值的占位符。使用promise的最佳例子是从服务器获取数据。**
+#####1、理解简单回调函数所带来的问题--使用promise的原因
+- 错误难以处理
+- 很难优雅的处理连续步骤
+#####2、深入研究promise
+一个promise对象，在其生命周期中，会有多种状态。一个promise对象从等待开始，在车需执行过程中，如果promise的resolve函数被调用，promise就会进入完成状态。如果promise的reject函数被调用，或者一个未处理的异常在promise调用过程中发生了，promise就会进入到拒绝状态。一个promise对象无法从完成状态再进入拒绝转态，反之亦然。
+```
+console.log("At code start");
+const ninjaDelayPromise = new Promise((resolve, reject) => { //调用Promise构造函数，创建一个新的promise，此时该promise为等待状态
+	console.log("ninjaDelayPromise executor");
+	setTimeout(()=>{    
+	console.log("Resolving ninjaDelayPromise");
+	resolve("Hattori");   //500毫秒之后，调用resolve，表明promise完成
+	},500);
+});
+console.log("After creating ninjaDelayPromise");
+ninjaDelayPromise.then(ninja => {   //promise的then方法，用于创建promise完成时执行的回调函数
+	console.log(ninja, "ninjaDelayPromise resolve handled with Hattori");
+});
 
+const ninjaImmediatePromise = new Promise((resolve, reject)=>{
+	console.log("ninjaImmediatePromise executor");
+	resolve("Yoshi");
+})
+ninjaImmediatePromise.then(ninja => {
+	console.log(ninja,"ninjaImmediatePromise resolve handled with Yoshi");
+})
+console.log("At code end");
+
+//打印结果：
+At code start
+ninjaDelayPromise executor
+After creating ninjaDelayPromise
+ninjaImmediatePromise executor
+At code end
+Yoshi ninjaImmediatePromise resolve handled with Yoshi
+Resolving ninjaDelayPromise
+Hattori ninjaDelayPromise resolve handled with Hattori
+```
+#####3、拒绝promise
+拒绝一个promise有两种方式：显式拒绝；隐式拒绝。
