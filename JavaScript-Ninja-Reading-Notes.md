@@ -6,13 +6,13 @@
 
 ## 第一部分 热身
 ###第1章 无处不在的JavaScript
-#### JavaScript区别于其他语言的一些概念
+#### 一、JavaScript区别于其他语言的一些概念
 * **函数是一等公民**——在JavaScript中，函数与其他对象共存，并且能够像任何其他对象一样使用。
 * **函数闭包**——第3、4、5章会详细说明。
 * **作用域**——JavaScript没有类似C语言的块级作用域变量，取而代之只能依赖函数级别的变量和全局变量。
 * **基于原型的面向对象**
 
-#### 可以帮助书写更优雅的JavaScript代码
+#### 二、可以帮助书写更优雅的JavaScript代码
 * 生成器：一次请求生成多次值的函数
 * Promise：便于控制异步代码
 * [Proxy](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy)：控制对特定对象的访问
@@ -936,7 +936,7 @@ for(let element of DomTraversal(subTree)) {  //使用for-of对节点进行循环
 
 #####3、与生成器交互
 - 作为生成器函数的参数，向生成器传递值
-```
+```javaScript
 function* NinjaGenerator(action) {
   yield ("Hattori " + action);
   yield ("Yoshi (" + imposter + ") " + action);
@@ -950,7 +950,7 @@ const result2 = ninjaIterator.next();
 console.log(result2.value);
 ```
 - 使用next方法向生成器发送值
-```
+```javaScript
 function* NinjaGenerator(action) {
   const imposter = yield ("Hattori " + action);
   console.log(imposter); //Hanzo作为yield表达式的返回值
@@ -968,7 +968,7 @@ console.log(result2.value);
 
 - 抛出异常
 每个迭代器除了next方法，还有一个throw方法。
-```
+```javaScript
 function* NinjaGenerator() {
 	try {
 		yield "Hattori";
@@ -987,7 +987,7 @@ const result2 = ninjaIterator.throw("exception");
 挂起让渡：当生成器在执行过程中遇到一个yield表达式，它会创建一个包含着返回值得新对象，随后再挂起执行。
 完成：在生成器执行期间，如果代码执行到return语句或者全部代码执行完毕，生成器进入该状态。
 - 通过执行上下文跟踪生成器函数
-```
+```javaScript
 function* NinjaGenerator(action) {
   yield ("Hattori " + action);
   yield ("Yoshi " + action);
@@ -1009,7 +1009,7 @@ console.log(result2.value);
 - 很难优雅的处理连续步骤
 #####2、深入研究promise
 一个promise对象，在其生命周期中，会有多种状态。一个promise对象从等待开始，在车需执行过程中，如果promise的resolve函数被调用，promise就会进入完成状态。如果promise的reject函数被调用，或者一个未处理的异常在promise调用过程中发生了，promise就会进入到拒绝状态。一个promise对象无法从完成状态再进入拒绝转态，反之亦然。
-```
+```javaScript
 console.log("At code start");
 const ninjaDelayPromise = new Promise((resolve, reject) => { //调用Promise构造函数，创建一个新的promise，此时该promise为等待状态
 	console.log("ninjaDelayPromise executor");
@@ -1044,7 +1044,7 @@ Hattori ninjaDelayPromise resolve handled with Hattori
 ```
 #####3、拒绝promise
 拒绝一个promise有两种方式，显式拒绝：在一个promise的执行函数中，调用传入的reject函数；隐式拒绝：正在处理的promise过程中抛出了一个异常。
-```javascript
+```javaScript
 //显式拒绝
 const promise = new Promise((resolve, reject) => {
 	reject("Explicitly reject a promise!");
@@ -1135,13 +1135,13 @@ Promise.race([
 ####四、把生成器和promise相结合
 ```javaScript
 function async(generator){
-	var iterator = generator();
-	function handle(iteratorResult) {
-		if(iteratorResult.done) {return;}
+	var iterator = generator();   //创建一个迭代器，通过其控制生成器
+	function handle(iteratorResult) {  //处理生成器产生的每个值
+		if(iteratorResult.done) {return;}    
 		const iteratorValue = iteratorResult.value;
-		if(iteratorValue instanceof Promise) {
-			iteratorValue.then(res => handle(iterator.next(res)))
-						.catch(err=>iterator.throw(err));
+		if(iteratorValue instanceof Promise) {    //如果返回值为promise，则对其注册成功和失败回调函数
+			iteratorValue.then(res => handle(iterator.next(res))) //成功后继续生成器的执行。
+						.catch(err=>iterator.throw(err));         //失败后，迭代器抛出异常。
 		}
 	}
 	try {
@@ -1161,3 +1161,23 @@ async(function* (){
 	}
 })
 ```
+**面向未来的async函数**
+通过在关键字function前使用关键字async，可以表明当前的函数依赖一个异步返回的值。在每个调用异步任务的位置上，都要放置一个await关键字，用来告诉javascript引擎，在不阻塞应用执行的情况下等待执行结果。
+```javaScript
+(async function() {
+	try {
+		const ninjas = await getJSON("data/ninjas.json");
+		const missions = await getJSON(ninjas.missionUrl);
+		console.log(missions)
+	} catch (e) {
+		console.log("An exception:", e);
+	}
+})
+```
+##第三部分 深入钻研对象，强化代码
+###第7章 面向对象与原型
+
+
+
+
+
