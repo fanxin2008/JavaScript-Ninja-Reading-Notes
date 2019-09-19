@@ -1176,6 +1176,68 @@ async(function* (){
 ```
 ##第三部分 深入钻研对象，强化代码
 ###第7章 面向对象与原型
+####一、理解原型
+在javascript中，对象是属性名与属性值的集合。对象属性可以是简单值（数字，字符串）、函数或其他对象。
+```
+let obj = {
+	prop1: 1,   //简单赋值
+	prop2: function(){}, //函数赋值
+	prop3: {}   //对象赋值
+}
+obj.prop1 = 2;  //
+obj.prop1 = []; //为对象属性赋值完全不同类型的值
+delete obj.prop2;  //从对象中删除属性
+obj.prop4 = "Hello"; //为对象添加新的属性
+console.log("obj最终为:", obj);
+//打印结果为:
+obj最终为: {prop1: Array(0), prop3: {…}, prop4: "Hello"}
+```
+每个对象都含有原型的引用，当查找属性时，若对象本身不具有该属性，则会查找原型上是否有该属性。对象可通过原型访问其他对象的属性。
+```javaScript
+const yoshi = { skulk: true };
+const hattori = { sneak: true };
+const kuma = { creep: true };
+
+console.log("yoshi 中是否有skulk属性?", "skulk" in yoshi);  //yoshi只能访问自身的属性
+console.log("yoshi 中是否有sneak属性?", "sneak" in yoshi); 
+console.log("yoshi 中是否有creep属性?", "creep" in yoshi);
+//打印结果：
+yoshi 中是否有skulk属性? true
+yoshi 中是否有sneak属性? false
+yoshi 中是否有creep属性? false
+
+Object.setPrototypeOf(yoshi, hattori); //Object.setPrototypeOf方法将hattori设置为yoshi的原型
+console.log("yoshi 中是否有sneak属性?", "sneak" in yoshi);
+//打印结果：
+yoshi 中是否有sneak属性? true   //通过将hattori设置为yoshi的原型，yoshi可以访问hattori对象的sneak属性
+
+Object.setPrototypeOf(hattori, kuma); //通过将kuma设置为hattori的原型，
+console.log("hattori 中是否有creep属性?", "creep" in hattori);
+console.log("yoshi 中是否有creep属性?", "creep" in yoshi);
+//打印结果
+hattori 中是否有creep属性? true
+yoshi 中是否有creep属性? true
+```
+- 对象的原型属性是内置属性，无法直接访问。<font color=red>我明明可以直接访问呀，这里的直接访问是什么鬼？？？</font>
+- 当访问对象上不存在属性时，将查询对象的原型，直到没有更多的原型可查询。
+- 每个对象都可以有一个原型，每个对象的原型也可以拥有一个原型，以此类推，形成一个原型链，查找特定属性将会被委托在整个原型链上，当没有更多原型可以查找时，才会停止查找。
+#####二、对象构造器与原型
+>每个函数都有一个原型对象，该原型对象指向创建对象的函数
+>每个函数的原型都具有一个constructor属性，该属性指向函数本身，通过该函数构造器生成的对象原型，就是constructor属性指向的对象，也就是构造函数本身。
+**<font color=red>这里跟绕口令一样</font>**
+######1、实例属性
+当把函数作为构造函数，通过操作符new进行调用时，它的上下文被定义为新的对象实例。通过原型暴露属性，通过构造函数进行初始化。
+```javaScript
+function Ninja() {
+	this.swung = false;
+	this.swingSword = function() {
+		return !this.swung;
+	}
+}
+Ninja.prototype.swingSword = function() {
+	
+}
+```
 
 
 
