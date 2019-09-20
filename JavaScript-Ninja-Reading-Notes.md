@@ -1231,13 +1231,62 @@ yoshi 中是否有creep属性? true
 function Ninja() {
 	this.swung = false;
 	this.swingSword = function() {
+		console.log("创建实例方法。")
 		return !this.swung;
 	}
 }
 Ninja.prototype.swingSword = function() {
-	
+	console.log("定义与实例方法同名的原型方法");
+	return this.swung;
 }
+const ninja = new Ninja();
+console.log(ninja.swingSword());
+//打印结果：实例方法会重写与之同名的原型方法
+创建实例方法。
+true
 ```
+>实例会隐藏原型中与实例方法重名的方法。在构造函数内部，this关键字指向新创建的对象，所以在构造函数内添加的属性属于新的ninja实例。当通过ninja访问swingSword属性时，就不需要遍历原型链，可以立即返回在构造器内创建的属性。创建重复属性会占用内存，因此只在函数的原型上创建对象方法是很有意义的，这样我们可以使得同一个方法由所有对象实例共享。如果我们需要私有对象，在构造函数内指定方法是唯一的解决方案。
+######2、JavaScript动态特性的副作用
+通过原型，一切属性都可以在运行时修改
+```
+function Ninja(){
+	this.swung = true;
+}
+const ninja1 = new Ninja();
+Ninja.prototype.swingSword = function(){
+	return this.swung;
+}
+console.log("ninja1 has swingSword:" + ninja1.swingSword());
+
+Ninja.prototype = {
+	pierce: function(){
+		return true;
+	}
+}
+console.log("ninja1 still has swingSword:" + ninja1.swingSword()); //尽管已经重写了Ninja的构造器原型，但是实例化之后的Ninja对象任然具有swingSword方法，因为对象ninja1任然保持着对旧Ninja原型的引用。
+const ninja2 = new Ninja();    //新创建的ninja2实例拥有新原型的引用，因此只具有pierce方法。
+console.log("ninja2 has pierce: " + ninja2.pierce());
+console.log("ninja2 has swingSword: " + ninja2.swingSword);
+
+//打印结果：
+ninja1 has swingSword:true
+ninja1 still has swingSword:true
+ninja2 has pierce: true
+ninja2 has swingSword: undefined
+```
+>对象与函数原型之间的引用关系是创建对象时建立的。新创建的对象将引用新的原型，之前创建的对象保持着原有的原型引用。
+######3、通过构造函数实现对象类型
+通过constructor属性，我们可以访问创建该对象时所用的函数。这个特性可用于类型校验。
+```
+function Ninja() {}
+const ninja = new Ninja();
+console.log("typeof ninja:" , typeof ninja);
+console.log("ninja instanceof Ninja:",ninja instanceof Ninja);
+console.log("ninja.constructor:", ninja.constructor);
+//打印结果：
+typeof ninja: object    //通过typeof检测ninja的类型
+ninja instanceof Ninja: true
+ninja.constructor: ƒ Ninja() {}
 
 
 
