@@ -1284,9 +1284,64 @@ console.log("typeof ninja:" , typeof ninja);
 console.log("ninja instanceof Ninja:",ninja instanceof Ninja);
 console.log("ninja.constructor:", ninja.constructor);
 //打印结果：
-typeof ninja: object    //通过typeof检测ninja的类型
+typeof ninja: object    //通过typeof检测ninja的类型，得知ninja为对象
+ninja instanceof Ninja: true //通过instanceof检测类型，得知ninja是由Ninja构造来的
+ninja.constructor: ƒ Ninja() {}  //通过constructor引用检测得到其构造函数的引用
+```
+>所有的实例对象都可以访问constructor属性。constructor属性是创建实例对象的函数的引用。我们可以使用constructor属性验证实例的原始类型，与instanceof非常类似。我们可以使用constructor属性创建新的Ninja对象。
+```
+function Ninja(){};
+const ninja1 = new Ninja();
+const ninja2 = new ninja1.constructor();
+console.log("ninja2 instanceof Ninja:",ninja2 instanceof Ninja);
+console.log("ninja1 = ninja2 ? ",ninja1 == ninja2)
+//打印结果为：
+inja2 instanceof Ninja: true   //ninja2通过ninja1的constructor属性创建成功
+ninja1 = ninja2 ?  false       //ninja1和ninja2是两个独立的实例
+```
+>虽然对象的constructor属性有可能发生改变，但是不建议修改，一旦重写constructor属性，那么原始值就丢失了。
+#####三、实现继承
+>我们想实现的继承，是一个完整的原型链，也就是一个对象的原型是另一个对象的实例。
+```
+function Person(){}
+Person.prototype.dance = function(){};
+function Ninja(){}
+Ninja.prototype = new Person();
+const ninja = new Ninja();
+
+Person.prototype.sleep = function(){} //实例化ninja后，修改Person的原型属性
+
+console.log("ninja instanceof Ninja:",ninja instanceof Ninja);
+console.log("ninja instanceof Person:",ninja instanceof Person);
+console.log("ninja instanceof Object:",ninja instanceof Object);
+console.log("can ninja sleep?",ninja.sleep)  //继承函数的原型实现实时更新
+
+//打印结果：
 ninja instanceof Ninja: true
-ninja.constructor: ƒ Ninja() {}
+ninja instanceof Person: true
+ninja instanceof Object: true
+can ninja sleep? ƒ (){}
+```
+######1、重写constructor属性的问题
+上述代码中有个严重的问题，无法查找到Ninja对象的constructor属性，因此在查找ninja的constructor属性时，得到的是Person，这不符合继承的预期。为了解决这个问题，我们需要借助Object.defineProperty方法在Ninja.prototype对象上增加新的constructor属性。这个新增的属性是不可被枚举的。
+```
+function Person(){}
+Person.prototype.dance = function(){};
+function Ninja(){}
+Ninja.prototype = new Person();
+Object.defineProperty(Ninja.prototype, "constructor", {
+	enumerable: false,
+	value: Ninja,
+	writable: true
+});
+
+var ninja = new Ninja();
+console.log("ninja.constructor == Ninja ?", ninja.constructor == Ninja);
+//打印结果：
+ninja.constructor == Ninja ? true //成功建立了ninja和Ninja的联系
+```
+######2、instanceof操作符
+>JavaScript中，instanceof作用于原型链。
 
 
 
