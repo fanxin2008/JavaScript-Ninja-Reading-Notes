@@ -1340,8 +1340,115 @@ console.log("ninja.constructor == Ninja ?", ninja.constructor == Ninja);
 //打印结果：
 ninja.constructor == Ninja ? true //成功建立了ninja和Ninja的联系
 ```
-######2、instanceof操作符
+#####2、instanceof操作符
 >JavaScript中，instanceof作用于原型链。
+```
+function Person(){};
+function Ninja(){};
+Ninja.prototype = new Person();
+const ninja = new Ninja();
+console.log("ninja instanceof Ninja:",ninja instanceof Ninja);
+console.log("ninja instanceof Person:",ninja instanceof Person);
+//执行结果：
+ninja instanceof Ninja: true
+ninja instanceof Person: true
+```
+ninja实例的原型链是由new Person()对象与Person的原型组成，ninja是通过原型链实现继承的。当执行ninja instanceof Ninja时，js引擎检查Ninja函数的原型（new Person()对象）是否存在于ninja的原型链上。在检查ninja instanceof Person时，js引擎查找Person函数的原型是否存在于ninja实例的原型链上。总而言之，instanceof操作符会检查，右侧的函数原型是否存在于左侧对象的原型链上。
+####四、在ES6使用JavaScript的class
+#####1、使用关键字class
+>ES6引入关键字class，提供了一种更为优雅的创建对象和实现继承的方式，底层仍然是基于原型的继承。
+```
+class Ninja{   //class是语法糖
+	constructor(name){   //定义一个构造函数，当使用关键字new调用类时，会调用这个构造函数
+		this.name = name;
+	}
+	swingSword(){        //定义了一个所有实例均可以访问的方法
+		return true;
+	}
+}
+var ninja = new Ninja("Yoshi");
+console.log("ninja instanceof Ninja:", ninja instanceof Ninja);
+console.log("ninja`s name: ", ninja.name);
+console.log("ninja can swingSword:", ninja.swingSword());
+//打印结果：
+ninja instanceof Ninja: true
+ninja`s name:  Yoshi
+ninja can swingSword: true
+```
+>通过static实现类级别的方法
+```
+class Ninja{
+	constructor(name, level){
+		this.name = name;
+		this.level = level;
+	}
+	swingSword(){
+		return true;
+	}
+	static compare(ninja1, ninja2) {
+		return ninja1.level - ninja2.level;
+	}
+}
+var ninja1 = new Ninja("Yoshi", 4);
+var ninja2 = new Ninja("Hattori", 3);
+console.log("compare in ninja1:","compare" in ninja1);
+console.log("compare in ninja2:","compare" in ninja2);
+console.log("compare in Ninja:","compare" in Ninja);
+//打印结果：
+compare in ninja1: false  //实例不可访问compare方法，Ninja类可以访问compare方法。
+compare in ninja2: false
+compare in Ninja: true
+```
+#####2、实现继承
+```
+class Person {
+	constructor(name){
+		this.name = name;
+	}
+	dance(){
+		return true;
+	}
+}
+class Ninja extends Person {   //使用关键字extends实现继承
+	constructor(name, weapon){
+		super(name);           //使用super调用基类的构造函数
+		this.weapon = weapon;
+	}
+	wieldWeapon(){
+		return true;
+	}
+}
+
+var person = new Person("Bob");
+console.log("person instanceof Person:",person instanceof Person);
+console.log("person can dance:", person.dance());
+console.log("person`name:",person.name);
+console.log("person is Ninja:", person instanceof Ninja);
+console.log("person can wieldWeapon:", "wieldWeapon" in person);
+
+var ninja = new Ninja("Yoshi","Wakizashi");
+console.log("ninja is Person:", ninja instanceof Person);
+console.log("ninja is Ninja:",ninja instanceof Ninja);
+console.log("ninja`name:",ninja.name);
+console.log("ninja can dance:", ninja.dance());
+console.log("ninja can wieldWeapon:", ninja.wieldWeapon());
+
+//打印结果：
+person instanceof Person: true
+person can dance: true
+person`name: Bob
+person is not Ninja: false
+person can wieldWeapon: false
+ninja is Person: true
+ninja is Ninja: true
+ninja`name: Yoshi
+ninja can dance: true
+ninja can wieldWeapon: true
+```
+>在ES6中，我们通过class和extends可以向传统面向对象语言那样简单实现类和继承。
+###第8章 控制对象的访问
+####一、使用getter与setter控制属性访问
+在JavaScript中，对象是属性的集合，当我们改变属性的值时，可以通过直接赋值的方式修改。如果需要控制赋值的类型和范围，记录属性的变化日志，便捷的将属性值的变化更新到
 
 
 
