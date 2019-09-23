@@ -1221,11 +1221,11 @@ yoshi 中是否有creep属性? true
 - 对象的原型属性是内置属性，无法直接访问。<font color=red>我明明可以直接访问呀，这里的直接访问是什么鬼？？？</font>
 - 当访问对象上不存在属性时，将查询对象的原型，直到没有更多的原型可查询。
 - 每个对象都可以有一个原型，每个对象的原型也可以拥有一个原型，以此类推，形成一个原型链，查找特定属性将会被委托在整个原型链上，当没有更多原型可以查找时，才会停止查找。
-#####二、对象构造器与原型
+####二、对象构造器与原型
 >每个函数都有一个原型对象，该原型对象指向创建对象的函数
 >每个函数的原型都具有一个constructor属性，该属性指向函数本身，通过该函数构造器生成的对象原型，就是constructor属性指向的对象，也就是构造函数本身。
 **<font color=red>这里跟绕口令一样</font>**
-######1、实例属性
+#####1、实例属性
 当把函数作为构造函数，通过操作符new进行调用时，它的上下文被定义为新的对象实例。通过原型暴露属性，通过构造函数进行初始化。
 ```javaScript
 function Ninja() {
@@ -1246,7 +1246,7 @@ console.log(ninja.swingSword());
 true
 ```
 >实例会隐藏原型中与实例方法重名的方法。在构造函数内部，this关键字指向新创建的对象，所以在构造函数内添加的属性属于新的ninja实例。当通过ninja访问swingSword属性时，就不需要遍历原型链，可以立即返回在构造器内创建的属性。创建重复属性会占用内存，因此只在函数的原型上创建对象方法是很有意义的，这样我们可以使得同一个方法由所有对象实例共享。如果我们需要私有对象，在构造函数内指定方法是唯一的解决方案。
-######2、JavaScript动态特性的副作用
+#####2、JavaScript动态特性的副作用
 通过原型，一切属性都可以在运行时修改
 ```
 function Ninja(){
@@ -1275,7 +1275,7 @@ ninja2 has pierce: true
 ninja2 has swingSword: undefined
 ```
 >对象与函数原型之间的引用关系是创建对象时建立的。新创建的对象将引用新的原型，之前创建的对象保持着原有的原型引用。
-######3、通过构造函数实现对象类型
+#####3、通过构造函数实现对象类型
 通过constructor属性，我们可以访问创建该对象时所用的函数。这个特性可用于类型校验。
 ```
 function Ninja() {}
@@ -1300,7 +1300,7 @@ inja2 instanceof Ninja: true   //ninja2通过ninja1的constructor属性创建成
 ninja1 = ninja2 ?  false       //ninja1和ninja2是两个独立的实例
 ```
 >虽然对象的constructor属性有可能发生改变，但是不建议修改，一旦重写constructor属性，那么原始值就丢失了。
-#####三、实现继承
+####三、实现继承
 >我们想实现的继承，是一个完整的原型链，也就是一个对象的原型是另一个对象的实例。
 ```
 function Person(){}
@@ -1322,7 +1322,7 @@ ninja instanceof Person: true
 ninja instanceof Object: true
 can ninja sleep? ƒ (){}
 ```
-######1、重写constructor属性的问题
+#####1、重写constructor属性的问题
 上述代码中有个严重的问题，无法查找到Ninja对象的constructor属性，因此在查找ninja的constructor属性时，得到的是Person，这不符合继承的预期。为了解决这个问题，我们需要借助Object.defineProperty方法在Ninja.prototype对象上增加新的constructor属性。这个新增的属性是不可被枚举的。
 ```
 function Person(){}
@@ -1448,7 +1448,303 @@ ninja can wieldWeapon: true
 >在ES6中，我们通过class和extends可以向传统面向对象语言那样简单实现类和继承。
 ###第8章 控制对象的访问
 ####一、使用getter与setter控制属性访问
-在JavaScript中，对象是属性的集合，当我们改变属性的值时，可以通过直接赋值的方式修改。如果需要控制赋值的类型和范围，记录属性的变化日志，便捷的将属性值的变化更新到UI
+在JavaScript中，对象是属性的集合，当我们改变属性的值时，可以通过直接赋值的方式修改。如果需要控制赋值的类型和范围，记录属性的变化日志，便捷的将属性值的变化更新到UI。使用setter和getter函数，可以优雅的实现以上功能。
+#####1、定义getter和setter
+在JavaScript中，可以通过两种方式定义getter和setter
+- 通过对象字面量定义，或在ES6的class中定义
+- 通过内置的Object.defineProperty方法
+```
+const ninjaCollection = {
+	ninjas: ["Yoshi", "Kuma", "Hattori"],
+	get firstNinja() {    //通过在属性名前添加关键字get定义getter方法
+		console.log("Getting firstNinja");
+		return this.ninjas[0];
+	},
+	set firstNinja(value) { //通过在属性名前添加关键字set定义setter方法
+		console.log("Setting firstNinja");
+		this.ninjas[0] = value;
+	}
+}
+
+console.log(ninjaCollection.firstNinja, "is the first ninja");
+ninjaCollection.firstNinja = "Hachi";
+console.log(ninjaCollection.firstNinja,ninjaCollection.ninjas[0]);
+
+//打印结果：
+Getting firstNinja
+Yoshi is the first ninja
+Setting firstNinja
+Getting firstNinja
+Hachi Hachi
+```
+```
+class NinjaCollection{
+	constructor(){
+		this.ninjas = ["Yoshi","Kuma","Hattori"];
+	}
+	get firstNinja(){
+		console.log("Getting firstNinja");
+		return this.ninjas[0];
+	}
+	set firstNinja(value){
+		console.log("Setting firstNinja");
+		this.ninjas[0] = value;
+	}
+}
+const ninjaCollection = new NinjaCollection();
+console.log(ninjaCollection.firstNinja," is the first ninja");
+ninjaCollection.firstNinja = "Hachi"
+console.log(ninjaCollection.firstNinja," is the first ninja now");
+
+//打印结果：
+Getting firstNinja
+Yoshi  is the first ninja
+Setting firstNinja
+Getting firstNinja
+Hachi  is the first ninja now
+```
+> 在非严格模式下，setter属性在仅有getter属性的情况下，不会生效。在严格模式下，仅有getter属性时，调用setter函数会报出异常。
+```
+function Ninja(){
+	let _skillLevel = 0;
+	Object.defineProperty(this, 'skillLevel', {
+		get: () => {
+			console.log('Getting skillLevel');
+			return _skillLevel;
+		},
+		set: value => {
+			console.log("Setting skillLevel");
+			_skillLevel = value;
+		}
+	});
+}
+
+const ninja = new Ninja();
+console.log("Can not access _skillLevel", typeof ninja._skillLevel === "undefined");
+console.log("Get skillLevel by getter", ninja.skillLevel);
+ninja.skillLevel = 10;
+console.log("Get skillLevel alter setter", ninja.skillLevel);
+//打印结果：
+Can not access _skillLevel true   //无法直接访问_skillLevel属性
+Getting skillLevel 
+Get skillLevel by getter 0
+Setting skillLevel
+Getting skillLevel
+Get skillLevel alter setter 10
+```
+>与对象字面量和class中的getter和setter不同，通过Object.defineProperty创建的get和set方法，与私有skillLevel变量处于相同作用域中。get和set方法分别创建了含有私有变量的闭包。我们只能通过get和set函数来访问私有变量。
+#####2、使用getter与setter校验属性值
+```
+function Ninja(){
+	let _skillLevel = 0;
+	Object.defineProperty(this, 'skillLevel', {
+		set: value => {
+			if (!Number.isInteger(value)){
+				throw new TypeError("Skill level should be a number");
+			}
+			_skillLevel = value;
+		},
+		get: () => _skillLevel
+	})
+}
+const ninja = new Ninja();
+ninja.skillLevel = 10;
+console.log("ninja.skillLevel was updated",ninja.skillLevel);
+try {
+	ninja.skillLevel = "aabb";
+} catch(e) {
+	console.log(e);
+}
+//打印结果：
+ninja.skillLevel was updated 10
+TypeError: Skill level should be a number
+```
+#####3、使用getter和setter定义计算属性
+```
+const shogun = {
+	name: "Yoshiaki",
+	clan: "Ashikaga",
+	get fullTitle() {
+		return this.name + " " + this.clan;
+	},
+	set fullTitle(value) {
+		const segments = value.split(" ");
+		this.name = segments[0];
+		this.clan = segments[1];
+	}
+};
+console.log("shogun.name:",shogun.name);
+console.log("shogun.clan:",shogun.clan);
+console.log("shogun.fullTitle:",shogun.fullTitle);
+
+shogun.fullTitle = "Ieyasu Tokugawa";
+
+console.log("shogun.name:",shogun.name);
+console.log("shogun.clan:",shogun.clan);
+console.log("shogun.fullTitle:",shogun.fullTitle);
+
+//打印结果：
+shogun.name: Yoshiaki
+VM2806:14 shogun.clan: Ashikaga
+VM2806:15 shogun.fullTitle: Yoshiaki Ashikaga
+VM2806:19 shogun.name: Ieyasu
+VM2806:20 shogun.clan: Tokugawa
+VM2806:21 shogun.fullTitle: Ieyasu Tokugawa
+```
+####二、使用代理控制访问
+ES6中，Proxy可以定义当对象发生交互时可执行的自定义行为。可以将Proxy理解为通用的setter和getter，区别是每个setter与getter仅能控制单个对象属性，而Proxy可用于对象交互的通用处理。
+```
+const emperor = { name: "Komei" };
+const representative = new Proxy(emperor, {
+	get: (target, key) => {
+		console.log("Reading " + key + " through a proxy");
+		return key in target ? target[key] : "Don`t bother the emperor";
+	},
+	set: (target, key, value) => {
+		console.log("Writing " + key + " through a proxy");
+		target[key] = value;
+	}
+});
+console.log("emperor.name:",emperor.name);
+console.log("representative.name:",representative.name);
+console.log("representative.name1:",representative.name1);
+
+representative.name = "Yoshi"; //通过代理设置name属性值
+
+console.log("emperor.name:",emperor.name);
+console.log("representative.name:",representative.name);
+
+representative.name1 = "Kuma"; //通过代理增加属性，通过基础对象和代理对象都可以访问到新增属性
+
+console.log("emperor.name1:",emperor.name1); 
+console.log("representative.name1:",representative.name1);
+
+//打印结果:
+emperor.name: Komei
+Reading name through a proxy
+representative.name: Komei
+Reading name1 through a proxy
+representative.name1: Don`t bother the emperor
+Writing name through a proxy
+emperor.name: Yoshi
+Reading name through a proxy
+representative.name: Yoshi
+Writing name1 through a proxy
+emperor.name1: Kuma
+Reading name1 through a proxy
+representative.name1: Kuma
+```
+>比较两个对象时，不应该访问这些对象，否则有可能激活equality方法。同样的，不能使用instanceof和typeOf操作符。<font color=red>啥意思？黑人脸问号脸</font>
+#####1、使用代理记录日志
+```
+function makeLoggable(target){
+	return new Proxy(target,{
+		set:(target, property, value) => {
+			console.log("Writing value " + value + " to " + property);
+			target[property] = value;
+		},
+		get:(target, property) => {
+			console.log("Reading " + property);
+			return target[property];
+		}	
+	})
+}
+let ninja = { name: "Yoshi" };
+ninja = makeLoggable(ninja);
+console.log("ninja.name:", ninja.name);
+ninja.weapon = "sword";
+//打印结果
+Reading name
+ninja.name: Yoshi
+Writing value sword to weapon
+```
+#####2、使用代理检测性能
+除了用于记录属性访问日志之外，代理还可以在不需要修改函数代码的情况下，评估函数调用的性能。
+```
+function isPrime(number){
+	if(number < 2) return false;
+	for(let i = 2; i < number; i++) {
+		if(number % i === 0 ) {
+			return false;
+		}
+	}
+	return true;
+}
+isPrime = new Proxy(isPrime,{
+	apply: (target, thisArg, args) => {  //通过代理添加了一个一旦调用该函数就会被触发的方法
+		console.time("isPrime");
+		const result = target.apply(thisArg, args);
+		console.timeEnd("isPrime");
+		return result;
+	}
+});
+isPrime(10);
+//打印结果：
+isPrime: 0.048828125ms
+false
+```
+#####3、使用代理自动填充属性
+```
+function Folder(){
+	return new Proxy({},{
+		get:(target, property) => {
+			console.log("Reading ",property);
+			if(!(property in target)) {
+				target[property] = new Folder();
+			}
+			return target[property];
+		}
+	})
+}
+const rootFolder = new Folder();
+try{
+	rootFolder.ninjasDir.firstNinjaDir.ninjaFile = "yoshi.txt";
+} catch(e){
+	console.log(e);
+}
+//打印结果：
+Reading  ninjasDir
+Reading  firstNinjaDir
+"yoshi.txt"
+```
+#####4、使用代理实现负数组
+```
+function creatNegativeArrayProxy(array) {
+	if(!Array.isArray(array)) {
+		throw new TypeError('Excepted an array');
+	}
+	return new Proxy(array,{
+		get:(target, index) => {
+			index = +index;
+			return target[index < 0 ? target.length + index : index];
+		},
+		set:(target,index,value) => {
+			index = +index;
+			return target[index < 0 ? target.length + index : index] = value;
+		}
+	})
+}
+const ninjas = ["ninja1","ninja2","ninja3","ninja4"];
+const proxyNinjas = creatNegativeArrayProxy(ninjas);
+console.log("index = 0",proxyNinjas[0]);
+console.log("index = 1",proxyNinjas[1]);
+console.log("index = -1",proxyNinjas[-1]);
+console.log("index = -2",proxyNinjas[-2]);
+
+//打印结果：
+index = 0 ninja1
+index = 1 ninja2
+index = -1 ninja4
+index = -2 ninja3
+```
+#####5、代理的性能消耗
+使用代理可以很好的控制对象的访问，但是大量的控制操作会带来性能的问题。
+###第9章 处理集合
+####一 数组
+#####1、创建数组
+创建数组有两种方法：
+- 使用内置的Array构造函数
+- 使用数组字面量[]
 
 
 
