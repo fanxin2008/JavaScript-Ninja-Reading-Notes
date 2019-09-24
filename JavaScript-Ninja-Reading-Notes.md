@@ -1745,6 +1745,170 @@ index = -2 ninja3
 创建数组有两种方法：
 - 使用内置的Array构造函数
 - 使用数组字面量[]
+> - 推荐使用数组字面量创建数组
+> - 将length值改为比原有值大的数，数组会被扩展，新扩展的元素均为undefined。将length值改为比原有数值小，数组将会被裁剪。
+> - 假如访问不存在的对象，会返回undefined，访问不存在的数字索引，也会返回undefined。
+> - 在数边界之外写入元素，数据将会扩大，中间的空元素为undefined，同时改变了length属性。
+#####2、在数组两端添加、删除元素
+- push：在数组末端添加元素
+- unshift：在数组开头添加元素
+- pop：从数组末端删除元素
+- shift：从数组开头删除元素
+> 性能考虑：pop和push只影响数组最后一个元素；unshift和shift修改第一个元素，之后每个元素都要调整。因此pop和push比shift和unshift要快很多，非特殊情况，不建议用shift和unshift方法。
+#####3、在数组任意位置添加、删除元素
+slice方法可以实现数组任意位置删除和插入。
+```
+const ninjas = ["Yagyu", "Kuma", "Hattori", "Fuma"];
+var removeItems = ninjas.splice(1,1);   //删除索引为1的元素
+console.log("删除索引为1的元素：",removeItems,"。 此时原数组为：", ninjas);
+
+removeItems = ninjas.splice(1, 2, "Mochizuki", "Yoshi", "Momochi"); //删除索引为1，2的元素，并插入三个元素
+console.log("删除索引为1,2的元素：", removeItems, "。 此时原数组为：", ninjas);
+//打印结果：
+删除索引为1的元素： ["Kuma"] 。 此时原数组为： (3) ["Yagyu", "Hattori", "Fuma"]
+删除索引为1,2的元素： (2) ["Hattori", "Fuma"] 。 此时原数组为： (4) ["Yagyu", "Mochizuki", "Yoshi", "Momochi"]
+```
+#####4、数组常用操作
+- 遍历数组
+```
+const ninjas = ["Yagyu", "Kuma", "Hattori", "Fuma"];
+ninjas.forEach(ninja => {
+	console.log(ninja)  //使用forEach遍历数组
+});
+//打印结果：
+Yagyu
+Kuma
+Hattori
+Fuma
+```
+- 映射数组
+```
+const ninjas = [
+	{name: "Yagyu", weapon: "shuriken"},
+	{name: "Yoshi", weapon: "katana"},
+	{name: "Kuma", weapon: "wakizashi"}
+]
+const weapons = ninjas.map(ninja => ninja.weapon);
+console.log(weapons);
+//打印结果：
+(3) ["shuriken", "katana", "wakizashi"]
+```
+- 使用every和some测试数组元素
+```
+const ninjas = [
+	{name: "Yagyu", weapon: "shuriken"},
+	{name: "Yoshi"},
+	{name: "Kuma", weapon: "wakizashi"}
+]
+
+console.log(ninjas.every(ninja => "name" in ninja)); //every对每个元素执行回调，均返回true时，every返回true，否则返回false
+console.log(ninjas.every(ninja => "weapon" in ninja));
+console.log(ninjas.some(ninja => "name" in ninja)); //some一旦有回调函数返回true，则终止执行返回true，如果所有回调均返回false，则some方法返回false
+console.log(ninjas.some(ninja => "weapon" in ninja));
+
+//打印结果：
+true
+false
+true
+true
+```
+- 使用find和filter实现数组查找
+```
+const ninjas = [
+	{name: "Yagyu", weapon: "shuriken"},
+	{name: "Yoshi"},
+	{name: "Kuma", weapon: "wakizashi"}
+]
+console.log(ninjas.find(ninja => {return ninja.weapon === "wakizashi";})); //find查找返回符合回调的第一个元素
+consol.log(ninjas.filter(ninja => {  //filter查找符合回调的所有元素
+	return "name" in ninja;
+}));
+//打印结果
+{name: "Kuma", weapon: "wakizashi"}
+
+0: {name: "Yagyu", weapon: "shuriken"}
+1: {name: "Yoshi"}
+2: {name: "Kuma", weapon: "wakizashi"}
+```
+- 使用indexOf和findIndex实现元素索引的查找
+```
+const ninjas = ["Yagyu", "Yoshi", "Kuma"];
+console.log("Yoshi is ", ninjas.indexOf("Yoshi"));
+console.log("Yoshi is ", ninjas.findIndex(ninja => ninja === "Yoshi"));
+//打印结果：
+Yoshi is  1
+Yoshi is  1
+```
+- 使用sort实现数组排序
+JavaScript引擎实现了排序算法，我们只需提供回调函数，告诉排序算法相邻两个元素的关系。小于0时，a在b前；等于0时，a和b位置相同；小于0时，b在a前。
+```
+const ninjas = [
+	{name: "Yagyu", weapon: "shuriken"},
+	{name: "Yoshi"},
+	{name: "Kuma", weapon: "wakizashi"}
+];
+ninjas.sort(function(ninja1, ninja2){
+	if(ninja1.name < ninja2.name) return -1;
+	if(ninja1.name > ninja2.name) return 1;
+	return 0;
+});
+console.log("排序后的数组为：",ninjas);
+//打印接果为：
+排序后的数组为： 
+	0: {name: "Kuma", weapon: "wakizashi"}
+	1: {name: "Yagyu", weapon: "shuriken"}
+	2: {name: "Yoshi"}
+```
+- 使用reduce函数实现合计数组元素
+reduce方法接收初始值，对数组每个元素执行回调函数，回调函数接收上一次回调结果以及当前的数组元素作为参数。最后一次回调函数的结果作为reduce的结果。
+```
+const numbers = [1,2,3,4];
+const sum = numbers.reduce((aggregated, number) => {
+	return aggregated + number ;
+}, 0); //0为累加的初始值
+console.log(sum); //10
+```
+#####5、复用内置的数组函数
+```
+const elems = {
+	length: 0,
+	add: function(elem) {
+		Array.prototype.push.call(this, elem);
+	},
+	gather: function(id){
+		this.add(document.getElementById(id));
+	},
+	find: function(callback) {
+		return Array.prototype.find.call(this, callback);
+	}
+}
+```
+通过使用call方法，将函数执行上下文改为我们定义的对象。上述例子不仅展示了可以改变函数上下文，而且展示了如何复用已经编写的代码。
+####二、Map
+#####1、别把Map当数组
+由于原型的继承属性和key仅支持字符串，所以不能使用对象作为map。
+#####2、创建Map
+```
+const ninjaIslandMap = new Map();
+const ninja1 = {name: "Yoshi"};
+const ninja2 = {name: "Hattori"};
+const ninja3 = {name: "Kuma"};
+ninjaIslandMap.set(ninja1,{homeIsland:"Honshu"});
+ninjaIslandMap.set(ninja2,{homeIsland:"Hokkaido"});
+console.log("Map的长度",ninjaIslandMap.size)
+console.log("获取ninja对象：ninja1",ninjaIslandMap.get(ninja1));
+console.log("没有映射的对象，是取不到的：",ninjaIslandMap.get(ninja3));
+console.log("使用has验证map中是否有某个key(ninja2):",ninjaIslandMap.has(ninja2));
+console.log("使用delete从map中删除key(ninja1)后：",ninjaIslandMap.delete(ninja1),ninjaIslandMap);
+console.log("使用clear清除map后：",ninjaIslandMap.clear(),ninjaIslandMap,"ninja1:",ninja1);
+//打印结果：
+Map的长度 2
+VM3617:8 获取ninja对象：ninja1 {homeIsland: "Honshu"}
+VM3617:9 没有映射的对象，是取不到的： undefined
+VM3617:10 使用has验证map中是否有某个key(ninja2): true
+VM3617:11 使用delete从map中删除key(ninja1)后： true Map(1) {{…} => {…}}
+VM3617:12 使用clear清除map后： undefined Map(0) {} ninja1: {name: "Yoshi"}
+```
 
 
 
