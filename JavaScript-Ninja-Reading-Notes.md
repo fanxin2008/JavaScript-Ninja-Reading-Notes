@@ -1886,7 +1886,7 @@ const elems = {
 通过使用call方法，将函数执行上下文改为我们定义的对象。上述例子不仅展示了可以改变函数上下文，而且展示了如何复用已经编写的代码。
 ####二、Map
 #####1、别把Map当数组
-由于原型的继承属性和key仅支持字符串，所以不能使用对象作为map。
+由于原型的继承属性和key仅支持字符串，所以不能使用对象作为map。map是健值对的集合，key可以是任意类型的值，甚至可以是对象。
 #####2、创建Map
 ```
 const ninjaIslandMap = new Map();
@@ -1909,6 +1909,123 @@ VM3617:10 使用has验证map中是否有某个key(ninja2): true
 VM3617:11 使用delete从map中删除key(ninja1)后： true Map(1) {{…} => {…}}
 VM3617:12 使用clear清除map后： undefined Map(0) {} ninja1: {name: "Yoshi"}
 ```
+#####3、遍历map
+可以使用for-of遍历map，可以确保遍历的顺序和插入的顺序一致。
+```
+const users = new Map();
+users.set('Wang',{age:19});
+users.set('Zhang', {age:18});
+users.set('Zhao',{age:23});
+for(let key of users.keys()){
+	console.log(key, users.get(key).age);
+};
+for(let item of users){
+	console.log(item);
+}
+//打印结果：
+Wang 19
+Zhang 18
+Zhao 23
+["Wang", {…}]
+["Zhang", {…}]
+["Zhao", {…}]
+```
+###三、Set
+在ES6中，Set对象中，每一个元素都是唯一的。
+在ES6之前，只能通过模拟来实现set，存在访问原型对象的风险。
+```
+//模拟实现Set
+function Set(){
+	this.data = {};
+	this.length = 0;
+}
+Set.prototype.has = function(item){
+	return typeof this.data[item] !== "undefined";
+};
+Set.prototype.add = function(item){
+	if(!this.has(item)) {
+		this.data[item] = true;
+		this.length++;
+	}
+}
+Set.prototype.remove = function(item){
+	if(this.has(item)) {
+		delete this.data[item];
+		this.length--;
+	}
+}
+const numbers = new Set();
+numbers.add(1);
+numbers.add(2);
+numbers.add(1);
+console.log(numbers.length, numbers.data);
+numbers.remove(2);
+console.log(numbers.length, numbers.data);
+//打印结果
+2 {1: true, 2: true}   //重复添加1，并没有添加成功
+1 {1: true}
+```
+#####1、创建Set
+使用内置的Set构造函数来创建Set对象。
+```
+const users = new Set(["Wang","Zhang","Li","Zhao"]);
+console.log(users); 
+users.add("Qian");            //通过add增元素
+console.log("Qian is in Set:",users.has("Qian"))  //通过has判断是否包含某个元素
+users.delete("Li");      //通过delete移除某个元素
+console.log(users);
+users.add("Zhang");     //添加重复元素，添加失败
+console.log(users.size, users);
+for(let item of users){  //使用for-of循环遍历Set，保证遍历的顺序和插入的顺序一致
+	console.log(item);
+}
+//打印结果
+Set(4) {"Wang", "Zhang", "Li", "Zhao"}
+Qian is in Set: true
+Set(4) {"Wang", "Zhang", "Zhao", "Qian"}
+4 Set(4) {"Wang", "Zhang", "Zhao", "Qian"}
+Wang
+Zhang
+Zhao
+Qian
+```
+#####2、并集Union
+并集是指合并两个集合，相同元素只保留一个。Set会自动处理，剔除两个集合中重复的元素。
+```
+const user1 = ["Wang", "Li", "Zhao", "Zhang"];
+const user2 = ["Qian", "Tong", "Zhao", "Zhang"];
+
+const userUnion = new Set([...user1, ...user2]);
+console.log(userUnion);
+//打印结果：
+0: "Wang"
+1: "Li"
+2: "Zhao"
+3: "Zhang"
+4: "Qian"
+5: "Tong"
+```
+#####3、交集
+两个交集是指创建新集合，该集合只包含两个集合同时出现的元素。
+```
+const user1 = new Set(["Wang", "Li", "Zhao", "Zhang"]);
+const user2 = new Set(["Qian", "Tong", "Zhao", "Zhang"]);
+const userIntersect = new Set([...user1].filter(user => user2.has(user))); //通过延展运算符，将Set转换为数组，使用filter过滤出两个Set中都存在的元素。
+console.log(userIntersect);
+//打印结果：
+Set(2) {"Zhao", "Zhang"}
+```
+#####4、差集
+两个集合的差集是创建新集合，只包含存在于A集合，但是不存在与B集合中的元素。
+```
+const user1 = new Set(["Wang", "Li", "Zhao", "Zhang"]);
+const user2 = new Set(["Qian", "Tong", "Zhao", "Zhang"]);
+const userDiffer = new Set([...user1].filter(user => !user2.has(user))); //通过延展运算符，将Set转换为数组，使用filter过滤出存在于A但是不存在于B的元素。
+console.log(userDiffer);
+//打印结果
+Set(2) {"Wang", "Li"}
+```
+
 
 
 
