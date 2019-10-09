@@ -2025,6 +2025,61 @@ console.log(userDiffer);
 //打印结果
 Set(2) {"Wang", "Li"}
 ```
+###第10章 正则表达式
+###第11章 代码模块化
+##第四部分 洞悉浏览器
+###第12章 DOM操作
+- **HTML DOM的原生特性，通常都能被属性表示，但是页面上的自定义特性，不能自动被元素属性表示。**访问这些自定义属性，需要使用DOM方法getAttribute和setAttribute。如果无法判断某个特性的属性是否存在，可以通过测试判定，如果不存在，则使用DOM方法来获取。在HTML5中，建议使用data-作为自定义属性的前缀，便于区分自定义特性和原生特性。
+```
+const value = element.someValue ? element.someValue
+								: element.getAttribute('someValue');
+```
+- **获取计算后的样式。**与元素相关联的样式可以来自许多方面，浏览器内置样式（用户代理样式表），通过样式属性赋值的样式，以及CSS代码中定义的CSS规则样式。可以使用内置的getComputedStyle方法获取描述对象。不论是显式声明在style特性上的，还是继承自样式表的，都可以获取。优先获取style特性指定的样式，style特性优先级高于集成的样式，即便集成的样式标记为!important也没用。
+```
+const computedStyles = getComputedStyle(element);
+if(computedStyles) {
+	property = property.replace(/([A-Z])/g,'-$1').toLowerCase();
+	return computedStyle.getPropertyValue(property);
+}
+```
+- **获取隐藏元素的尺寸（宽和高）。**height和width属性，在不指定值的情况下，默认值是auto。因此，除非显式提供特性字符串，我们是不能使用height和width来获取准确值的。可以通过offsetHeight和offsetWidth访问实际元素的高度和宽度，这个高度是包含了padding值。值得注意的是，在非显示的元素上，尝试获取offsetWidth和offsetHeight属性值，结果都是0。
+通过以下步骤，可以获取一个隐藏元素的尺寸：
+1、将display属性设置为block
+2、将visibility设置为hidden
+3、将position这是为absolute
+4、获取元素尺寸
+5、恢复之前更改的属性
+```
+(function(){    //创建私有作用域
+	const PROPERTIES= {
+		position: "absolute",
+		visibility: "hidden",
+		display: "block"
+	};
+	window.getDimensions = element => {
+		const previous = {};
+		for(let key in PROPERTIES){
+			previous[key] = element.style[key];
+			element.style[key] = PROPERTIES[key];
+		}
+		const result = {
+			width: element.offsetWidth,
+			height: element.offsetHeight
+		};
+		for(let key in previous){
+			element.style[key] = previous[key];
+		}
+		return result;
+	};
+})();
+```
+> 检查offsetWidth和offsetHeight属性值是否为0，可以非常有效果的确定一个元素是否可见。
+
+- 当我们对DOM进行一系列连贯的读写操作时，会发生布局抖动。引起布局抖动的方法和属性如下图
+ ![Alt text](./1570591269589.png)
+###第13章 历久弥新的事件
+####一、深入事件循环
+浏览器中需要处理的事件分为两类任务，宏任务和微任务。事件循环的实现至少应该含有一个用于宏任务的队列和至少一个用于微任务的队列。事件循环的基本原则是：一次处理一个任务；一个任务从开始到结束不会被其他任务中断。单次事件循环中，最多处理一个宏任务，而队列中所有的微任务都会被处理。当微任务队列被清空后，才会执行UI的更新。
 
 
 
